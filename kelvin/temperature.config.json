@@ -1,34 +1,50 @@
 [
     {
         "long_name": "Platinum Precursor", 
-        "short_name": "leftprecursor"
+        "short_name": "leftprecursor",
+        "maximum_temperature": 44,
+        "maximum_rate": 3
     },
     {
         "long_name": "Platinum Line (air side)", 
-        "short_name": "leftlineair"
+        "short_name": "leftlineair",
+        "maximum_temperature": 80,
+        "maximum_rate": 3
     },
     {
         "long_name": "Platinum Line (vacuum side)", 
-        "short_name": "leftlinevacuum"
+        "short_name": "leftlinevacuum",
+        "maximum_temperature": 100,
+        "maximum_rate": 3
     },
     {
         "long_name": "Right Precursor", 
-        "short_name": "rightprecursor"
+        "short_name": "rightprecursor",
+        "maximum_temperature": 30,
+        "maximum_rate": 3
     },
     {
         "long_name": "Right Line (air side)", 
-        "short_name": "rightlineair"
+        "short_name": "rightlineair",
+        "maximum_temperature": 100,
+        "maximum_rate": 3
     },
     {
         "long_name": "Right Line (vacuum side)", 
-        "short_name": "rightlinevacuum"
+        "short_name": "rightlinevacuum",
+        "maximum_temperature": 100,
+        "maximum_rate": 3
     },
     {
         "long_name": "Center Line (vacuum side)", 
-        "short_name": "centerlinevacuum"
+        "short_name": "centerlinevacuum",
+        "maximum_temperature": 100,
+        "maximum_rate": 3
     },
     {
         "long_name": "Copper Heater", 
-        "short_name": "copperheater"
+        "short_name": "copperheater",
+        "maximum_temperature": 350,
+        "maximum_rate": 2
     }
 ]
