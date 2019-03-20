@@ -7,6 +7,11 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QPushButton,
+    QSystemTrayIcon,
+    QStyle,
+    QMenu,
+    QAction,
+    qApp
 )
 from PyQt5.QtGui import QFont, QDoubleValidator, QValidator
 from PyQt5.QtCore import Qt
@@ -48,6 +53,45 @@ class TextBox(QWidget):
     def set_validator(self, validator: QValidator):
         self._line_edit.setValidator(validator)
 
+class StateWidget(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        layout = QGridLayout()
+        self.setLayout(layout)
+        
+        self._tsp_label = QLabel()
+        font = self._tsp_label.font()
+        font.setPointSize(10)
+        self._tsp_label.setFont(font)
+        
+        self._wsp_label = QLabel()
+        self._wsp_label.setFont(font)
+        
+        self._power_label = QLabel()
+        self._power_label.setFont(font)
+
+        self._temperature_label = QLabel()
+        self._temperature_label.setFont(font)
+        
+        layout.addWidget(self._tsp_label, 0, 0)
+        layout.addWidget(self._wsp_label, 1, 0)
+        layout.addWidget(self._power_label, 0, 1)
+        layout.addWidget(self._temperature_label, 1, 1)
+        
+        
+    def set_tsp(self, value):
+        self._tsp_label.setText('T:{value:0.1f} °C'.format(value=value))
+        
+    def set_wsp(self, value):
+        self._wsp_label.setText('W:{value:0.1f} °C'.format(value=value))
+        
+    def set_power(self, value):
+        self._power_label.setText('{value:0.1f} %'.format(value=value))
+        
+    def set_temperature(self, value):
+        self._temperature_label.setText('C:{value:0.1f} °C'.format(value=value))
+
 
 class MainApp(QMainWindow):
 
@@ -63,17 +107,54 @@ class MainApp(QMainWindow):
 
     TOPIC_SET_T = 'ald/temperature/set/temperature'
     TOPIC_GET_T = 'ald/temperature/+'
+    
+    WINDOW_TITLE = "Kelvin"
 
     def __init__(self):
         super().__init__()
 
+        self._init_system_tray()
         self._init_gui()
         self._load_devices()
         self._connect_to_mqtt()
 
+    def _init_system_tray(self):
+    
+        show_action = QAction("Show", self)
+        show_action.triggered.connect(self.show)
+    
+        quit_action = QAction("Exit", self)
+        quit_action.triggered.connect(qApp.quit)
+    
+        self._tray = QSystemTrayIcon(self)
+        self._tray.setIcon(self.style().standardIcon(QStyle.SP_ComputerIcon))
+        
+        tray_menu = QMenu()
+        tray_menu.addAction(show_action)
+        tray_menu.addAction(quit_action)
+        self._tray.setContextMenu(tray_menu)
+        
+        self._tray.show()
+        
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.hide()
+        self._tray.showMessage(
+            self.WINDOW_TITLE,
+            "Application was minimized to Tray",
+            QSystemTrayIcon.Information,
+            2000
+        )
+    
+
     def _connect_to_mqtt(self):
         base_dir = os.path.dirname(__file__)
         config_path = os.path.join(base_dir, self.CREDENTIALS_FILE_NAME)
+
+        if not os.path.exists(config_path):
+            self._button.setDisabled(True)
+            return
 
         with open(config_path, 'r') as fil:
             credentials = json.load(fil)
@@ -87,7 +168,7 @@ class MainApp(QMainWindow):
 
 
     def _init_gui(self):
-        self.setWindowTitle("Kelvin")
+        self.setWindowTitle(self.WINDOW_TITLE)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -103,10 +184,10 @@ class MainApp(QMainWindow):
         hbox = QHBoxLayout()
         hbox.addStretch()
 
-        button = QPushButton("apply")
-        button.pressed.connect(self.apply)
+        self._button = QPushButton("apply")
+        self._button.pressed.connect(self.apply)
 
-        hbox.addWidget(button)
+        hbox.addWidget(self._button)
         layout.addLayout(hbox)
 
     def _load_devices(self):
@@ -131,10 +212,14 @@ class MainApp(QMainWindow):
 
             label = QLabel(device["long_name"] + "\n")
             label.setAlignment(Qt.AlignRight | Qt.AlignBottom)
-
+            
+            detail_widget = StateWidget()
+            device['detail_widget'] = detail_widget
+            
             self._grid.addWidget(label, index, 0)
             self._grid.addWidget(temperature_input, index, 1)
             self._grid.addWidget(rate_input, index, 2)
+            self._grid.addWidget(detail_widget, index, 3)
 
     def mqtt_connected(self, client, *args, **kwargs):
         client.subscribe(self.TOPIC_GET_T)
@@ -142,7 +227,20 @@ class MainApp(QMainWindow):
 
 
     def temperature_received(self, client, userdata, msg):
-        print(msg)
+        sensor = msg.topic.split('/')[-1]
+        data = json.loads(msg.payload.decode('utf-8'))
+        
+        for device in self.DEVICES:
+            if device['short_name'] == sensor:
+                device['detail_widget'].set_tsp(data['tsp'])
+                device['detail_widget'].set_wsp(data['wsp'])
+                device['detail_widget'].set_power(data['power'])
+                device['detail_widget'].set_temperature(data['temperature'])
+                
+                break
+        
+        #print(sensor, data)
+
 
 
     def apply(self):
