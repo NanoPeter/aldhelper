@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QAction,
     qApp
 )
-from PyQt5.QtGui import QFont, QDoubleValidator, QValidator
+from PyQt5.QtGui import QFont, QDoubleValidator, QValidator, QIcon
 from PyQt5.QtCore import Qt
 
 from paho.mqtt.client import Client as MQTTClient
@@ -102,7 +102,7 @@ class MainApp(QMainWindow):
     RATE_DEFAULT = '2.0'
 
     CONFIG_FILE_NAME = 'temperature.config.json'
-
+    ICON_FILE_NAME = 'temperature_symbol.png'
     CREDENTIALS_FILE_NAME = 'credentials.json'
 
     TOPIC_SET_T = 'ald/temperature/set/temperature'
@@ -118,8 +118,18 @@ class MainApp(QMainWindow):
         self._load_devices()
         self._connect_to_mqtt()
 
+    def get_path(self, file_name):
+        base_dir = os.path.dirname(__file__)
+        path = os.path.join(base_dir, file_name)
+
+        return path        
+
     def _init_system_tray(self):
-    
+        
+        icon_path = self.get_path(self.ICON_FILE_NAME)
+
+        icon = QIcon(icon_path)
+
         show_action = QAction("Show", self)
         show_action.triggered.connect(self.show)
     
@@ -127,7 +137,7 @@ class MainApp(QMainWindow):
         quit_action.triggered.connect(qApp.quit)
     
         self._tray = QSystemTrayIcon(self)
-        self._tray.setIcon(self.style().standardIcon(QStyle.SP_ComputerIcon))
+        self._tray.setIcon(icon)
         
         tray_menu = QMenu()
         tray_menu.addAction(show_action)
@@ -149,14 +159,13 @@ class MainApp(QMainWindow):
     
 
     def _connect_to_mqtt(self):
-        base_dir = os.path.dirname(__file__)
-        config_path = os.path.join(base_dir, self.CREDENTIALS_FILE_NAME)
+        credentials_path = self.get_path(self.CREDENTIALS_FILE_NAME)
 
-        if not os.path.exists(config_path):
+        if not os.path.exists(credentials_path):
             self._button.setDisabled(True)
             return
 
-        with open(config_path, 'r') as fil:
+        with open(credentials_path, 'r') as fil:
             credentials = json.load(fil)
 
         self._mqtt = MQTTClient()
@@ -191,9 +200,7 @@ class MainApp(QMainWindow):
         layout.addLayout(hbox)
 
     def _load_devices(self):
-
-        base_dir = os.path.dirname(__file__)
-        config_path = os.path.join(base_dir, self.CONFIG_FILE_NAME)
+        config_path = self.get_path(self.CONFIG_FILE_NAME)
 
         with open(config_path, 'r') as fil:
             self.DEVICES = json.load(fil)
