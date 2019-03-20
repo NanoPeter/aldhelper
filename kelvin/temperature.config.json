@@ -1,0 +1,34 @@
+[
+    {
+        "long_name": "Platinum Precursor", 
+        "short_name": "leftprecursor"
+    },
+    {
+        "long_name": "Platinum Line (air side)", 
+        "short_name": "leftlineair"
+    },
+    {
+        "long_name": "Platinum Line (vacuum side)", 
+        "short_name": "leftlinevacuum"
+    },
+    {
+        "long_name": "Right Precursor", 
+        "short_name": "rightprecursor"
+    },
+    {
+        "long_name": "Right Line (air side)", 
+        "short_name": "rightlineair"
+    },
+    {
+        "long_name": "Right Line (vacuum side)", 
+        "short_name": "rightlinevacuum"
+    },
+    {
+        "long_name": "Center Line (vacuum side)", 
+        "short_name": "centerlinevacuum"
+    },
+    {
+        "long_name": "Copper Heater", 
+        "short_name": "copperheater"
+    }
+]
